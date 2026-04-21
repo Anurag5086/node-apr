@@ -8,12 +8,15 @@ app.use(express.json());
 
 // Routes
 const userRoutes = require('./routes/userRoutes');
+const errorHandler = require('./middlewares/errorMiddleware');
 app.use('/api/user', userRoutes);
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI)
         .then(() => console.log('Connected to MongoDB'))
         .catch(err => console.error('Could not connect to MongoDB', err));
+
+app.use(errorHandler)
 
 // Server Start
 app.listen(3000, () => {
