@@ -3,11 +3,16 @@ const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 
-const app = express()
+const app = express();
 const server = http.createServer(app);
 
+// Enable CORS
 app.use(cors());
 
+// Serve static files
+app.use(express.static('public'));
+
+// Initialize socket.io after static middleware
 const io = new Server(server, {
     cors: {
         origin: "https://chat-app-h9ca.onrender.com",
@@ -19,7 +24,7 @@ app.set('view engine', 'ejs');
 app.set('views', './views');
 
 app.get('/', (req, res) => {
-  res.render('index')
+  res.render('index');
 });
 
 io.on('connection', (socket) => {
@@ -29,22 +34,22 @@ io.on('connection', (socket) => {
         console.log(`${username} joined the chat.`);
         socket.username = username; // Store the username in the socket object for later use
         io.emit('user_joined', `${username} has joined the chat.`); // Notify all clients that a new user has joined
-    })
+    });
 
     socket.on('send_message', (message) => {
         console.log(`Message from ${socket.username}: ${message}`);
         io.emit('new_message', { username: socket.username, message }); // Broadcast the message to all clients
-    })
+    });
 
     socket.on('disconnect', () => {
         console.log("User disconnected:", socket.id);
         if (socket.username) {
             io.emit('user_left', `${socket.username} has left the chat.`); // Notify all clients that a user has left
         }
-    })
-})
+    });
+});
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`listening on *:${PORT}`);
+  console.log(`Server is running on http://localhost:${PORT}`);
 });
