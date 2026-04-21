@@ -1,10 +1,19 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
+const cors = require('cors');
 
 const app = express()
 const server = http.createServer(app);
-const io = new Server(server);
+
+app.use(cors());
+
+const io = new Server(server, {
+    cors: {
+        origin: "https://chat-app-h9ca.onrender.com",
+        methods: ["GET", "POST"]
+    }
+});
 
 app.set('view engine', 'ejs');
 app.set('views', './views');
@@ -35,6 +44,7 @@ io.on('connection', (socket) => {
     })
 })
 
-server.listen(3000, () => {
-  console.log('listening on *:3000');
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`listening on *:${PORT}`);
 });

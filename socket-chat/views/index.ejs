@@ -94,7 +94,7 @@
     <script src="/socket.io/socket.io.js"></script>
 
     <script>
-        const socket = io();
+        const socket = io('https://chat-app-h9ca.onrender.com');
 
         const username = prompt("Enter your username:");
         socket.emit('join', username);
