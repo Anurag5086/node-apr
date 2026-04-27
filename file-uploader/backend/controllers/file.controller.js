@@ -19,6 +19,16 @@ exports.uploadFile = async (req, res) => {
             return res.status(400).json({ error: error.details[0].message });
         }
 
+        const fileData = new File({
+            title,
+            description,
+            attachment: req.file.path
+        })
+
+        await fileData.save();
+
+        res.status(201).json({ message: 'File uploaded successfully', file: fileData });
+
     }catch(err){
         console.error('Error uploading file:', err);
         res.status(500).json({ error: 'Internal Server Error' });
