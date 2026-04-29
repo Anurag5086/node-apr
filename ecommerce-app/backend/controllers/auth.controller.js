@@ -65,7 +65,7 @@ exports.verifyOtp = async (req, res) => {
 
         const token = jwt.sign({
             userId: user._id,
-            isAdmin: user.isAdmin,
+            role: user.role,
         },
         process.env.JWT_SECRET,
         { expiresIn: '30d' }
@@ -117,7 +117,7 @@ exports.loginUser = async (req, res) => {
         if(user.isVerified){
             const token = jwt.sign({
                 userId: user._id,
-                isAdmin: user.isAdmin,
+                role: user.role,
                 },
                 process.env.JWT_SECRET,
                 { expiresIn: '30d' }
