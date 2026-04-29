@@ -1,8 +1,9 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
-const joi = require('joi');
-const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
+const { generateOtp, generateOtpExpiry } = require('../utils/common');
+const { userRegistrationSchema } = require('../utils/validators');
+const sendEmailForOtp = require('../utils/nodemailer');
 
 const SALTS = 10
 
@@ -10,13 +11,7 @@ exports.registerUser = async (req, res) => {
     try{
         const { name, email, password } = req.body;
 
-        const schema = joi.object({
-            name: joi.string().trim().min(3).max(50).required(),
-            email: joi.string().trim().lowercase().email().required(),
-            password: joi.string().min(6).required(),
-        })
-
-        const {error} = schema.validate({ name, email, password });
+        const { error } = userRegistrationSchema.validate({ name, email, password });
         if(error){
             return res.status(400).json({ message: error.details[0].message });
         }
@@ -27,8 +22,8 @@ exports.registerUser = async (req, res) => {
             return res.status(400).json({ message: 'User already exists' });
         }
 
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // OTP valid for 10 minutes
+        const otp = generateOtp();
+        const otpExpiry = generateOtpExpiry();
 
         const hashedPassword = await bcrypt.hash(password, SALTS);
 
@@ -38,42 +33,11 @@ exports.registerUser = async (req, res) => {
             password: hashedPassword,
             otp,
             otpExpiry
-        })
+        });
 
         await newUser.save();
-
-        nodemailer.createTestAccount((err, account) => {
-            if (err) {
-                console.error('Failed to create a testing account. ' + err.message);
-                return res.status(500).json({ message: 'Server error' });
-            }
-
-            const transporter = nodemailer.createTransport({
-                host: 'smtp.gmail.com',
-                port: 587, // TLS
-                secure: false, // false for 587
-                auth: {
-                    user: 'anurag23816@gmail.com',
-                    pass: 'odvhmpklcgyojjkb'
-                }
-            });
-
-            const mailOptions = {
-                from: '"E-commerce App" <anurag23816@gmail.com>',
-                to: email,
-                subject: 'OTP for Email Verification',
-                text: `Your OTP for email verification is: ${otp}`
-            };
-
-            transporter.sendMail(mailOptions, (error, info) => {
-                if (error) {
-                    console.error('Error sending email: ' + error.message);
-                    return res.status(500).json({ message: 'Server error' });
-                }
-                console.log('Message sent: %s', info.messageId);
-                console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
-            });
-        });
+        
+        await sendEmailForOtp(email, otp); 
 
         res.status(201).json({ message: 'User registered successfully' });
     }catch(err){
@@ -122,45 +86,13 @@ exports.resendOtp = async (req, res) => {
             return res.status(400).json({ message: 'User not found' });
         }
 
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // OTP valid for 10 minutes
+        const otp = generateOtp();
+        const otpExpiry = generateOtpExpiry();
 
         user.otp = otp;
         user.otpExpiry = otpExpiry;
         await user.save();
-
-                nodemailer.createTestAccount((err, account) => {
-            if (err) {
-                console.error('Failed to create a testing account. ' + err.message);
-                return res.status(500).json({ message: 'Server error' });
-            }
-
-            const transporter = nodemailer.createTransport({
-                host: 'smtp.gmail.com',
-                port: 587, // TLS
-                secure: false, // false for 587
-                auth: {
-                    user: 'anurag23816@gmail.com',
-                    pass: 'odvhmpklcgyojjkb'
-                }
-            });
-
-            const mailOptions = {
-                from: '"E-commerce App" <anurag23816@gmail.com>',
-                to: email,
-                subject: 'OTP for Email Verification',
-                text: `Your OTP for email verification is: ${otp}`
-            };
-
-            transporter.sendMail(mailOptions, (error, info) => {
-                if (error) {
-                    console.error('Error sending email: ' + error.message);
-                    return res.status(500).json({ message: 'Server error' });
-                }
-                console.log('Message sent: %s', info.messageId);
-                console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
-            });
-        });
+        await sendEmailForOtp(email, otp);
 
         res.status(200).json({ message: 'OTP resent successfully' });
     }catch(err){
