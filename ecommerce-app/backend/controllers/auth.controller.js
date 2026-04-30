@@ -128,7 +128,7 @@ exports.loginUser = async (req, res) => {
                 { expiresIn: '30d' }
             );
 
-            res.status(200).json({ message: 'Login successful', token });
+            res.status(200).json({ message: 'Login successful', token, isVerified: user.isVerified });
         }
 
         res.status(200).json({ message: 'Login successful, but email not verified' , token: null , isVerified: user.isVerified});

@@ -6,6 +6,10 @@ const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const productRoutes = require('./routes/productRoutes');
+const cors = require('cors');
+
+// middleware
+app.use(cors());
 
 app.use(express.json())
 
