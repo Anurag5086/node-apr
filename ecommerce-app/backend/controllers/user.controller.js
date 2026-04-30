@@ -35,10 +35,6 @@ exports.getUserByEmail = async (req, res) => {
 
 exports.getAllUsers = async (req, res) => {
     try{
-        if(req.user.role !== 'admin'){
-            return res.status(403).json({ message: 'Forbidden' });
-        }
-
         const users = await User.find().select('-password -otp -otpExpiry');
 
         res.status(200).json({ users });
