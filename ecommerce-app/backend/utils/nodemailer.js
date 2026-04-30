@@ -25,9 +25,10 @@ const sendEmailForOtp = async (email, otp) => {
     transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
             console.error('Error sending email: ' + error.message);
-            return res.status(500).json({ message: 'Server error' });
+            return false;
         }
         console.log('Message sent: %s', info.messageId);
+        return true;
     });
 }
 

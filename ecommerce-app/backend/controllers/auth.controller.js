@@ -92,7 +92,12 @@ exports.resendOtp = async (req, res) => {
         user.otp = otp;
         user.otpExpiry = otpExpiry;
         await user.save();
-        await sendEmailForOtp(email, otp);
+
+        const isMailSent = await sendEmailForOtp(email, otp);
+
+        if(!isMailSent){
+            return res.status(500).json({ message: 'Failed to send OTP email' });
+        }
 
         res.status(200).json({ message: 'OTP resent successfully' });
     }catch(err){
