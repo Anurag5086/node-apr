@@ -1,6 +1,7 @@
 const express = require('express');
 const authMiddleware = require('../middlewares/auth.middleware');
 const adminMiddleware = require('../middlewares/admin.middleware');
+const { getAllProducts, getAllProductsByCategory, getProductById, createProduct, updateProduct, deleteProduct } = require('../controllers/product.controller');
 const router = express.Router();
 
 router.get('/get-all-products', authMiddleware, getAllProducts);
