@@ -96,12 +96,13 @@ exports.resendOtp = async (req, res) => {
         const isMailSent = await sendEmailForOtp(email, otp);
 
         if(!isMailSent){
-            return res.status(500).json({ message: 'Failed to send OTP email' });
+            return res.status(500).json({ message: 'Failed to send OTP email. Check server mail configuration (GMAIL_USER, GMAIL_PASS).' });
         }
 
         res.status(200).json({ message: 'OTP resent successfully' });
     }catch(err){
-        res.status(500).json({ message: 'Server error' });
+        console.error('[resendOtp]', err);
+        res.status(500).json({ message: err.message || 'Server error' });
     }
 }
 
