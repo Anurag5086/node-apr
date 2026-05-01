@@ -55,13 +55,23 @@ exports.updateUser = async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        user.name = name || user.name;
-        user.phoneNumber = phoneNumber || user.phoneNumber;
-        user.address = address || user.address;
+        if (name !== undefined) {
+            user.name = name;
+        }
+        if (phoneNumber !== undefined) {
+            const trimmed = phoneNumber != null ? String(phoneNumber).trim() : '';
+            user.phoneNumber =
+                trimmed.length === 0 ? undefined : trimmed;
+        }
+        if (address !== undefined) {
+            user.address =
+                address === '' || address == null ? undefined : address;
+        }
 
         await user.save();
 
-        res.status(200).json({ message: 'User updated successfully' });
+        const safe = await User.findById(userId).select('-password -otp -otpExpiry');
+        res.status(200).json({ message: 'User updated successfully', user: safe });
     }catch(err){
         res.status(500).json({ message: 'Server error' });
     }

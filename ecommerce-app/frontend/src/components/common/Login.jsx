@@ -1,16 +1,25 @@
-import { useState, useContext } from "react";
+import { useState } from "react";
 import { loginUser, resendOtp } from "../../api/auth";
-import { useNavigate, Link } from "react-router-dom";
-// import { AuthContext } from "../../context/AuthContext";
+import { useNavigate, Link, useLocation } from "react-router-dom";
+import { getToken, parseJwtPayload } from "../../utils/auth";
+import { AuthLayout } from "./AuthLayout";
+import {
+  authCardClass,
+  dangerTextClass,
+  inputClass,
+  labelClass,
+  linkClass,
+  primaryButtonClass,
+  spinnerClass,
+} from "./theme";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  // const { login } = useContext(AuthContext);
-
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -20,78 +29,103 @@ const Login = () => {
     localStorage.setItem("userEmail", email);
 
     try {
-      const data = await loginUser(email, password);
-      localStorage.setItem("token", JSON.stringify(data.token));
+      const result = await loginUser(email, password);
+      localStorage.setItem("token", JSON.stringify(result.token));
 
-      if(!data.isVerified) {
-        const data = await resendOtp(email);
-        navigate("/verify-otp");
+      if (!result.isVerified) {
+        await resendOtp(email);
+        navigate("/verify-otp", { state: { from: location.state?.from } });
         return;
       }
 
-      alert("Login successful");
-      navigate("/");
-    } catch (error) {
-      setError(error.response?.data?.message || "Login failed");
+      const payload = parseJwtPayload(getToken());
+      const from = location.state?.from;
+      const fallback =
+        payload?.role === "admin" ? "/admin/orders" : "/";
+      navigate(from || fallback);
+    } catch (err) {
+      setError(err.message || "Login failed");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      {/* Card */}
-      <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center mb-6">Welcome Back 👋</h1>
+    <AuthLayout>
+      <div className={authCardClass}>
+        <p className="text-sm font-medium uppercase tracking-widest text-indigo-600">
+          Welcome back
+        </p>
+        <h1 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
+          Sign in to Shop.
+        </h1>
+        <p className="mt-2 text-sm text-slate-600">
+          Enter your email and password to continue.
+        </p>
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleLogin} className="mt-8 space-y-5">
           <div>
+            <label htmlFor="login-email" className={labelClass}>
+              Email
+            </label>
             <input
+              id="login-email"
               type="email"
-              placeholder="Enter your email"
-              className="w-full border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+              autoComplete="email"
+              placeholder="you@example.com"
+              className={inputClass}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
-            {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
           </div>
 
           <div>
+            <label htmlFor="login-password" className={labelClass}>
+              Password
+            </label>
             <input
+              id="login-password"
               type="password"
-              placeholder="Enter your password"
-              className="w-full border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+              autoComplete="current-password"
+              placeholder="••••••••"
+              className={inputClass}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
+            {error ? <p className={dangerTextClass}>{error}</p> : null}
           </div>
 
-          <p
-            className="text-sm text-blue-500 cursor-pointer text-left mt-2"
+          <button
+            type="button"
             onClick={() => navigate("/forgot-password")}
+            className={`${linkClass} text-sm`}
           >
-            Forgot Password?
-          </p>
+            Forgot password?
+          </button>
 
           <button
             type="submit"
-            className="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-800 transition flex items-center justify-center"
+            className={`${primaryButtonClass} inline-flex items-center justify-center`}
             disabled={loading}
           >
-            {loading ? <span className="loader"></span> : "Login"}
+            {loading ? (
+              <span className={spinnerClass} aria-hidden />
+            ) : (
+              "Sign in"
+            )}
           </button>
 
-          <p className="text-center text-sm">
-            New user?{" "}
-            <Link to="/register" className="text-blue-500 hover:underline">
-              Register
+          <p className="text-center text-sm text-slate-600">
+            New here?{" "}
+            <Link to="/register" className={linkClass}>
+              Create an account
             </Link>
           </p>
         </form>
       </div>
-    </div>
+    </AuthLayout>
   );
 };
 

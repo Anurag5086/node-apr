@@ -10,6 +10,15 @@ exports.getAllCategories = async (req, res) => {
     }
 }
 
+exports.getAllCategoriesAdmin = async (req, res) => {
+    try {
+        const categories = await Category.find().sort({ createdAt: -1 });
+        res.status(200).json(categories);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error' });
+    }
+}
+
 exports.getCategoryById = async (req, res) => {
     try{
         const { id } = req.params;

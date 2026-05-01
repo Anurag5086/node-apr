@@ -1,6 +1,15 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { registerUser } from "../../api/auth";
+import { AuthLayout } from "./AuthLayout";
+import {
+  authCardClass,
+  dangerTextClass,
+  inputClass,
+  labelClass,
+  linkClass,
+  primaryButtonClass,
+} from "./theme";
 
 const Register = () => {
   const [form, setForm] = useState({
@@ -8,78 +17,101 @@ const Register = () => {
     email: "",
     password: "",
   });
-
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const submitHandler = async (e) => {
     e.preventDefault();
-
-    localStorage.setItem("userEmail", form.email); // Store email for OTP verification
+    setError("");
+    localStorage.setItem("userEmail", form.email);
 
     try {
-      const data = await registerUser(form.name, form.email, form.password);
+      await registerUser(form.name, form.email, form.password);
       navigate("/verify-otp");
-    } catch (error) {
-      alert(error.response?.data?.message || "Something went wrong");
+    } catch (err) {
+      setError(err.message || "Something went wrong");
     }
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      <form
-        onSubmit={submitHandler}
-        className="bg-white p-8 rounded-2xl shadow-lg w-[350px]"
-      >
-        <h2 className="text-2xl font-bold text-center mb-6">Create Account</h2>
-
-        <div className="mb-4">
-          <label className="block text-sm mb-1">Name</label>
-          <input
-            type="text"
-            placeholder="Enter your name"
-            className="w-full border px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-sm mb-1">Email</label>
-          <input
-            type="email"
-            placeholder="Enter your email"
-            className="w-full border px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-          />
-        </div>
-
-        <div className="mb-6">
-          <label className="block text-sm mb-1">Password</label>
-          <input
-            type="password"
-            placeholder="Enter password"
-            className="w-full border px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
-          />
-        </div>
-
-        <button
-          type="submit"
-          className="w-full bg-black text-white py-2 rounded-lg hover:bg-gray-800 transition"
-        >
-          Register
-        </button>
-
-        <p className="text-sm text-center mt-4">
-          Already have an account?{" "}
-          <span
-            className="text-blue-500 cursor-pointer"
-            onClick={() => navigate("/login")}
-          >
-            Login
-          </span>
+    <AuthLayout>
+      <div className={authCardClass}>
+        <p className="text-sm font-medium uppercase tracking-widest text-indigo-600">
+          Join Shop.
         </p>
-      </form>
-    </div>
+        <h1 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
+          Create your account
+        </h1>
+        <p className="mt-2 text-sm text-slate-600">
+          A few details and you&apos;re ready to browse and buy.
+        </p>
+
+        <form onSubmit={submitHandler} className="mt-8 space-y-5">
+          <div>
+            <label htmlFor="register-name" className={labelClass}>
+              Name
+            </label>
+            <input
+              id="register-name"
+              type="text"
+              autoComplete="name"
+              placeholder="Your name"
+              className={inputClass}
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              required
+            />
+          </div>
+
+          <div>
+            <label htmlFor="register-email" className={labelClass}>
+              Email
+            </label>
+            <input
+              id="register-email"
+              type="email"
+              autoComplete="email"
+              placeholder="you@example.com"
+              className={inputClass}
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              required
+            />
+          </div>
+
+          <div>
+            <label htmlFor="register-password" className={labelClass}>
+              Password
+            </label>
+            <input
+              id="register-password"
+              type="password"
+              autoComplete="new-password"
+              placeholder="At least 8 characters"
+              className={inputClass}
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              required
+            />
+            {error ? <p className={dangerTextClass}>{error}</p> : null}
+          </div>
+
+          <button
+            type="submit"
+            className={`${primaryButtonClass} inline-flex items-center justify-center`}
+          >
+            Continue
+          </button>
+
+          <p className="text-center text-sm text-slate-600">
+            Already have an account?{" "}
+            <Link to="/login" className={linkClass}>
+              Sign in
+            </Link>
+          </p>
+        </form>
+      </div>
+    </AuthLayout>
   );
 };
 
