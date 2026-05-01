@@ -10,6 +10,10 @@ function createTransporter() {
         host: 'smtp.gmail.com',
         port: 587,
         secure: false,
+        family: 4,
+        connectionTimeout: 20000,
+        greetingTimeout: 15000,
+        socketTimeout: 25000,
         auth: {
             user: process.env.GMAIL_USER,
             pass: process.env.GMAIL_PASS,
